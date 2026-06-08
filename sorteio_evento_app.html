@@ -1,0 +1,591 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans, system-ui); background: var(--color-background-tertiary, #f5f5f5); min-height: 100vh; }
+
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* HEADER */
+  .header {
+    background: #1a1a2e;
+    color: white;
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+    position: relative;
+  }
+  .header h1 { font-size: 20px; font-weight: 600; letter-spacing: 0.5px; }
+  .header p { font-size: 13px; opacity: 0.7; margin-top: 4px; }
+  .badge-count {
+    position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,0.15); border-radius: 20px; padding: 4px 12px;
+    font-size: 12px; font-weight: 500;
+  }
+
+  /* CONTENT */
+  .content { flex: 1; padding: 1.5rem; max-width: 480px; margin: 0 auto; width: 100%; }
+
+  /* FORM */
+  .form-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid #e8e8e8;
+    margin-bottom: 1rem;
+  }
+  .form-title { font-size: 15px; font-weight: 600; color: #1a1a2e; margin-bottom: 1rem; }
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
+  .form-group input {
+    width: 100%; padding: 10px 14px; border: 1.5px solid #e0e0e0;
+    border-radius: 10px; font-size: 15px; transition: border-color 0.2s;
+    background: #fafafa; color: #1a1a2e;
+  }
+  .form-group input:focus { outline: none; border-color: #4a4aff; background: white; }
+  .form-group input.error { border-color: #e24b4a; }
+
+  .btn {
+    width: 100%; padding: 14px; border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary { background: #1a1a2e; color: white; }
+  .btn-primary:hover { background: #2d2d50; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary { background: #f0f0f0; color: #333; margin-top: 8px; }
+  .btn-secondary:hover { background: #e0e0e0; }
+
+  .error-msg { color: #e24b4a; font-size: 12px; margin-top: 4px; display: none; }
+
+  /* SUCCESS */
+  .success-card {
+    background: white; border-radius: 16px; padding: 2rem; text-align: center;
+    border: 1px solid #e8e8e8;
+  }
+  .ticket-number {
+    font-size: 64px; font-weight: 700; color: #1a1a2e;
+    line-height: 1; margin: 1rem 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .ticket-label { font-size: 12px; color: #999; text-transform: uppercase; letter-spacing: 1px; }
+  .ticket-name { font-size: 18px; font-weight: 600; color: #1a1a2e; margin-top: 0.5rem; }
+  .ticket-info { font-size: 13px; color: #666; margin-top: 0.5rem; }
+  .confetti { font-size: 40px; margin-bottom: 0.5rem; }
+
+  /* ADMIN */
+  .admin-header {
+    background: #1a1a2e; color: white; padding: 1rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .admin-header h2 { font-size: 16px; font-weight: 600; }
+
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem;
+  }
+  .stat-card {
+    background: white; border-radius: 12px; padding: 1rem;
+    border: 1px solid #e8e8e8; text-align: center;
+  }
+  .stat-num { font-size: 32px; font-weight: 700; color: #1a1a2e; }
+  .stat-label { font-size: 12px; color: #999; margin-top: 2px; }
+
+  /* SORTEIO */
+  .sorteio-card {
+    background: white; border-radius: 16px; padding: 1.5rem;
+    border: 1px solid #e8e8e8; margin-bottom: 1rem; text-align: center;
+  }
+  .winner-display {
+    min-height: 120px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .winner-number { font-size: 72px; font-weight: 700; color: #1a1a2e; line-height: 1; }
+  .winner-name { font-size: 20px; font-weight: 600; color: #333; margin-top: 8px; }
+  .winner-email { font-size: 13px; color: #999; margin-top: 4px; }
+  .winner-phone { font-size: 13px; color: #999; margin-top: 2px; }
+  .placeholder-text { color: #ccc; font-size: 14px; }
+
+  .rolling { animation: roll 0.1s infinite; }
+  @keyframes roll { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+  /* LISTA */
+  .list-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+  .list-title { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+  .search-input {
+    padding: 8px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px;
+    font-size: 13px; width: 160px; background: #fafafa;
+  }
+  .search-input:focus { outline: none; border-color: #4a4aff; }
+
+  .participants-list { background: white; border-radius: 12px; border: 1px solid #e8e8e8; overflow: hidden; }
+  .participant-item {
+    display: flex; align-items: center; padding: 12px 16px;
+    border-bottom: 1px solid #f5f5f5; gap: 12px;
+  }
+  .participant-item:last-child { border-bottom: none; }
+  .p-num {
+    width: 36px; height: 36px; border-radius: 50%; background: #1a1a2e;
+    color: white; font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .p-info { flex: 1; min-width: 0; }
+  .p-name { font-size: 14px; font-weight: 500; color: #1a1a2e; }
+  .p-email { font-size: 12px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .p-time { font-size: 11px; color: #ccc; }
+  .p-delete { background: none; border: none; color: #e24b4a; cursor: pointer; font-size: 18px; padding: 4px; }
+
+  .empty-state { padding: 2rem; text-align: center; color: #ccc; font-size: 14px; }
+
+  /* ADMIN LOGIN */
+  .login-card {
+    background: white; border-radius: 16px; padding: 2rem;
+    border: 1px solid #e8e8e8; max-width: 320px; margin: 3rem auto;
+  }
+  .login-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 1.5rem; color: #1a1a2e; }
+
+  .tab-bar {
+    display: flex; gap: 8px; margin-bottom: 1rem; background: #f0f0f0;
+    border-radius: 10px; padding: 4px;
+  }
+  .tab {
+    flex: 1; padding: 8px; border: none; background: none; border-radius: 7px;
+    font-size: 13px; font-weight: 500; cursor: pointer; color: #999;
+    transition: all 0.2s;
+  }
+  .tab.active { background: white; color: #1a1a2e; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  .btn-danger { background: #e24b4a; color: white; width: auto; padding: 8px 16px; font-size: 13px; border-radius: 8px; border: none; cursor: pointer; }
+  .btn-sm { width: auto; padding: 10px 20px; font-size: 14px; border-radius: 10px; }
+
+  .nav-back { background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 13px; padding: 0; }
+  .nav-back:hover { color: white; }
+
+  .winner-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff3cd; border: 1px solid #ffc107; border-radius: 20px;
+    padding: 4px 12px; font-size: 12px; color: #856404; font-weight: 500;
+    margin-top: 6px;
+  }
+
+  .already-registered {
+    background: #fff3cd; border: 1px solid #ffc107; border-radius: 12px;
+    padding: 1.5rem; text-align: center; margin-bottom: 1rem;
+  }
+  .already-registered .big-num { font-size: 48px; font-weight: 700; color: #1a1a2e; }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #1a1a2e; color: white; padding: 12px 20px; border-radius: 10px;
+    font-size: 14px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== SCREEN: CADASTRO ===== -->
+<div class="screen active" id="screen-cadastro">
+  <div class="header">
+    <h1>🎉 Sorteio do Evento</h1>
+    <p>Cadastre-se para participar</p>
+  </div>
+
+  <div class="content">
+    <!-- Já cadastrado -->
+    <div class="already-registered" id="already-box" style="display:none;">
+      <div style="font-size:32px;margin-bottom:8px;">✅</div>
+      <p style="font-size:14px;color:#666;margin-bottom:8px;">Você já está cadastrado!</p>
+      <p style="font-size:13px;color:#999;margin-bottom:4px;">Seu número da sorte:</p>
+      <div class="big-num" id="already-num">--</div>
+      <p style="font-size:13px;color:#999;margin-top:4px;" id="already-name"></p>
+    </div>
+
+    <!-- Sucesso -->
+    <div class="success-card" id="success-box" style="display:none;">
+      <div class="confetti">🎊</div>
+      <p class="ticket-label">Cadastro realizado!</p>
+      <div class="ticket-number" id="success-num">--</div>
+      <p class="ticket-name" id="success-name"></p>
+      <p class="ticket-info" id="success-email"></p>
+      <p style="font-size:12px;color:#aaa;margin-top:1rem;">Guarde seu número da sorte 🍀</p>
+    </div>
+
+    <!-- Formulário -->
+    <div class="form-card" id="form-card">
+      <p class="form-title">Preencha seus dados</p>
+
+      <div class="form-group">
+        <label>Nome completo *</label>
+        <input type="text" id="inp-nome" placeholder="Seu nome" autocomplete="name">
+        <p class="error-msg" id="err-nome">Informe seu nome completo</p>
+      </div>
+
+      <div class="form-group">
+        <label>E-mail *</label>
+        <input type="email" id="inp-email" placeholder="seu@email.com" autocomplete="email">
+        <p class="error-msg" id="err-email">Informe um e-mail válido</p>
+        <p class="error-msg" id="err-email-dup">Este e-mail já está cadastrado!</p>
+      </div>
+
+      <div class="form-group">
+        <label>Telefone / WhatsApp *</label>
+        <input type="tel" id="inp-tel" placeholder="(11) 99999-9999" autocomplete="tel">
+        <p class="error-msg" id="err-tel">Informe seu telefone</p>
+      </div>
+
+      <button class="btn btn-primary" onclick="cadastrar()">Participar do sorteio</button>
+    </div>
+
+    <p style="text-align:center;font-size:12px;color:#ccc;margin-top:0.5rem;">
+      Cada pessoa pode se cadastrar apenas uma vez
+    </p>
+  </div>
+</div>
+
+<!-- ===== SCREEN: ADMIN LOGIN ===== -->
+<div class="screen" id="screen-admin-login">
+  <div class="header">
+    <button class="nav-back" onclick="goTo('cadastro')" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);">← Voltar</button>
+    <h1>Administração</h1>
+  </div>
+  <div class="content">
+    <div class="login-card">
+      <h3>🔐 Acesso restrito</h3>
+      <div class="form-group">
+        <label>Senha de administrador</label>
+        <input type="password" id="inp-senha" placeholder="Digite a senha" onkeydown="if(event.key==='Enter')adminLogin()">
+        <p class="error-msg" id="err-senha" style="display:block;color:transparent;">Senha incorreta</p>
+      </div>
+      <button class="btn btn-primary" onclick="adminLogin()">Entrar</button>
+    </div>
+    <p style="text-align:center;font-size:12px;color:#ccc;margin-top:1rem;">Senha padrão: <strong>admin123</strong></p>
+  </div>
+</div>
+
+<!-- ===== SCREEN: ADMIN PAINEL ===== -->
+<div class="screen" id="screen-admin">
+  <div class="admin-header">
+    <button class="nav-back" onclick="goTo('cadastro')">← Sair</button>
+    <h2>⚙️ Painel do Sorteio</h2>
+    <button class="btn-danger" onclick="if(confirm('Limpar TODOS os dados?'))limparTudo()">Limpar</button>
+  </div>
+
+  <div class="content" style="max-width:600px;">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-label">Participantes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-sorteios">0</div>
+        <div class="stat-label">Sorteados</div>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab('sorteio',this)">🎲 Sorteio</button>
+      <button class="tab" onclick="switchTab('lista',this)">📋 Lista</button>
+    </div>
+
+    <!-- ABA SORTEIO -->
+    <div id="tab-sorteio">
+      <div class="sorteio-card">
+        <div class="winner-display" id="winner-display">
+          <p class="placeholder-text">Pressione o botão para sortear</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" style="flex:1;" onclick="sortear()">🎲 Sortear</button>
+        <button class="btn btn-secondary btn-sm" onclick="sortearTodos()" title="Sortear ignorando já sorteados" style="flex:1;">🔄 Novo sorteio</button>
+      </div>
+
+      <div id="winners-list-section" style="display:none;">
+        <div class="list-header">
+          <span class="list-title">Ganhadores anteriores</span>
+          <button onclick="limparGanhadores()" style="background:none;border:none;color:#e24b4a;font-size:12px;cursor:pointer;">Limpar</button>
+        </div>
+        <div class="participants-list" id="winners-history"></div>
+      </div>
+    </div>
+
+    <!-- ABA LISTA -->
+    <div id="tab-lista" style="display:none;">
+      <div class="list-header">
+        <span class="list-title">Participantes cadastrados</span>
+        <input class="search-input" type="text" placeholder="Buscar..." oninput="filtrarLista(this.value)" id="search-input">
+      </div>
+      <div class="participants-list" id="participants-list">
+        <p class="empty-state">Nenhum participante ainda</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Link admin oculto -->
+<div style="position:fixed;bottom:8px;right:8px;">
+  <button onclick="goTo('admin-login')" style="background:none;border:none;color:#ddd;font-size:11px;cursor:pointer;opacity:0.4;">admin</button>
+</div>
+
+<script>
+const ADMIN_PASS = 'admin123';
+
+function getData() {
+  try { return JSON.parse(localStorage.getItem('sorteio_participants') || '[]'); } catch { return []; }
+}
+function saveData(d) { localStorage.setItem('sorteio_participants', JSON.stringify(d)); }
+function getWinners() {
+  try { return JSON.parse(localStorage.getItem('sorteio_winners') || '[]'); } catch { return []; }
+}
+function saveWinners(w) { localStorage.setItem('sorteio_winners', JSON.stringify(w)); }
+
+function getDeviceId() {
+  let id = localStorage.getItem('device_id');
+  if (!id) { id = 'dev_' + Math.random().toString(36).substr(2,12); localStorage.setItem('device_id',id); }
+  return id;
+}
+
+function genTicket() {
+  const taken = getData().map(p => p.ticket);
+  let n;
+  do { n = Math.floor(Math.random() * 9000) + 1000; } while (taken.includes(n));
+  return n;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function goTo(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  if (screen === 'admin') renderAdmin();
+  if (screen === 'cadastro') checkAlreadyRegistered();
+}
+
+function checkAlreadyRegistered() {
+  const devId = getDeviceId();
+  const data = getData();
+  const mine = data.find(p => p.deviceId === devId);
+  if (mine) {
+    document.getElementById('form-card').style.display = 'none';
+    document.getElementById('success-box').style.display = 'none';
+    document.getElementById('already-box').style.display = 'block';
+    document.getElementById('already-num').textContent = mine.ticket;
+    document.getElementById('already-name').textContent = mine.nome;
+  }
+}
+
+function fmtPhone(v) {
+  v = v.replace(/\D/g,'');
+  if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3');
+  return v.replace(/(\d{2})(\d{5})(\d{0,4})/,'($1) $2-$3');
+}
+
+document.getElementById('inp-tel').addEventListener('input', function() {
+  this.value = fmtPhone(this.value);
+});
+
+function cadastrar() {
+  const nome = document.getElementById('inp-nome').value.trim();
+  const email = document.getElementById('inp-email').value.trim().toLowerCase();
+  const tel = document.getElementById('inp-tel').value.trim();
+
+  let ok = true;
+  ['err-nome','err-email','err-email-dup','err-tel'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+    document.getElementById(id).parentElement.querySelector('input')?.classList.remove('error');
+  });
+
+  if (nome.length < 3) {
+    document.getElementById('err-nome').style.display = 'block';
+    document.getElementById('inp-nome').classList.add('error'); ok = false;
+  }
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!emailOk) {
+    document.getElementById('err-email').style.display = 'block';
+    document.getElementById('inp-email').classList.add('error'); ok = false;
+  }
+  if (tel.replace(/\D/g,'').length < 10) {
+    document.getElementById('err-tel').style.display = 'block';
+    document.getElementById('inp-tel').classList.add('error'); ok = false;
+  }
+  if (!ok) return;
+
+  const data = getData();
+  const devId = getDeviceId();
+
+  if (data.find(p => p.deviceId === devId)) {
+    checkAlreadyRegistered(); return;
+  }
+  if (data.find(p => p.email === email)) {
+    document.getElementById('err-email-dup').style.display = 'block';
+    document.getElementById('inp-email').classList.add('error'); return;
+  }
+
+  const ticket = genTicket();
+  const participant = { id: Date.now(), nome, email, tel, ticket, deviceId: devId, ts: new Date().toLocaleString('pt-BR') };
+  data.push(participant);
+  saveData(data);
+
+  document.getElementById('form-card').style.display = 'none';
+  document.getElementById('success-num').textContent = ticket;
+  document.getElementById('success-name').textContent = nome;
+  document.getElementById('success-email').textContent = email;
+  document.getElementById('success-box').style.display = 'block';
+}
+
+function adminLogin() {
+  const v = document.getElementById('inp-senha').value;
+  if (v === ADMIN_PASS) {
+    document.getElementById('err-senha').style.color = 'transparent';
+    goTo('admin');
+  } else {
+    document.getElementById('err-senha').textContent = 'Senha incorreta!';
+    document.getElementById('err-senha').style.color = '#e24b4a';
+  }
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-sorteio').style.display = tab === 'sorteio' ? 'block' : 'none';
+  document.getElementById('tab-lista').style.display = tab === 'lista' ? 'block' : 'none';
+  if (tab === 'lista') renderLista();
+}
+
+function renderAdmin() {
+  const data = getData();
+  const winners = getWinners();
+  document.getElementById('stat-total').textContent = data.length;
+  document.getElementById('stat-sorteios').textContent = winners.length;
+  renderWinnersHistory();
+  renderLista();
+}
+
+function renderLista(filter) {
+  const data = getData();
+  const list = document.getElementById('participants-list');
+  let items = filter ? data.filter(p => p.nome.toLowerCase().includes(filter) || p.email.toLowerCase().includes(filter) || String(p.ticket).includes(filter)) : data;
+  if (!items.length) {
+    list.innerHTML = '<p class="empty-state">Nenhum participante encontrado</p>'; return;
+  }
+  const winners = getWinners().map(w => w.id);
+  list.innerHTML = items.map(p => `
+    <div class="participant-item">
+      <div class="p-num">${p.ticket}</div>
+      <div class="p-info">
+        <p class="p-name">${p.nome} ${winners.includes(p.id) ? '<span class="winner-badge">🏆 Sorteado</span>' : ''}</p>
+        <p class="p-email">${p.email} · ${p.tel}</p>
+        <p class="p-time">${p.ts}</p>
+      </div>
+      <button class="p-delete" onclick="removerParticipante(${p.id})" title="Remover">×</button>
+    </div>
+  `).join('');
+}
+
+function filtrarLista(v) { renderLista(v.toLowerCase()); }
+
+function removerParticipante(id) {
+  if (!confirm('Remover este participante?')) return;
+  const data = getData().filter(p => p.id !== id);
+  saveData(data);
+  renderAdmin();
+}
+
+let isRolling = false;
+
+function sortear(includeWinners) {
+  const data = getData();
+  const winners = getWinners();
+  const winnerIds = winners.map(w => w.id);
+  const pool = includeWinners ? data : data.filter(p => !winnerIds.includes(p.id));
+  if (!pool.length) {
+    showToast(data.length ? 'Todos já foram sorteados!' : 'Nenhum participante cadastrado!');
+    return;
+  }
+
+  isRolling = true;
+  let count = 0;
+  const total = 20;
+  const display = document.getElementById('winner-display');
+
+  function step() {
+    if (count >= total) {
+      isRolling = false;
+      const winner = pool[Math.floor(Math.random() * pool.length)];
+      const winnersArr = getWinners();
+      if (!winnersArr.find(w => w.id === winner.id)) {
+        winnersArr.push(winner);
+        saveWinners(winnersArr);
+      }
+      display.innerHTML = `
+        <div style="animation:roll 0.4s ease-out">
+          <p style="font-size:12px;color:#aaa;margin-bottom:4px;">🏆 GANHADOR</p>
+          <div class="winner-number">${winner.ticket}</div>
+          <div class="winner-name">${winner.nome}</div>
+          <div class="winner-email">${winner.email}</div>
+          <div class="winner-phone">${winner.tel}</div>
+        </div>`;
+      renderAdmin();
+      return;
+    }
+    const rand = pool[Math.floor(Math.random() * pool.length)];
+    display.innerHTML = `<div class="winner-number rolling" style="color:#ccc;">${rand.ticket}</div>`;
+    count++;
+    setTimeout(step, 50 + count * 5);
+  }
+  step();
+}
+
+function sortearTodos() { sortear(true); }
+
+function renderWinnersHistory() {
+  const winners = getWinners();
+  const sec = document.getElementById('winners-list-section');
+  const hist = document.getElementById('winners-history');
+  if (!winners.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  hist.innerHTML = winners.slice().reverse().map((w,i) => `
+    <div class="participant-item">
+      <div class="p-num" style="background:#f5a623;">${w.ticket}</div>
+      <div class="p-info">
+        <p class="p-name">🏆 ${w.nome}</p>
+        <p class="p-email">${w.email}</p>
+      </div>
+      <span style="font-size:11px;color:#ccc;">#${winners.length - i}</span>
+    </div>
+  `).join('');
+}
+
+function limparGanhadores() {
+  if (!confirm('Limpar histórico de ganhadores?')) return;
+  saveWinners([]);
+  document.getElementById('winner-display').innerHTML = '<p class="placeholder-text">Pressione o botão para sortear</p>';
+  renderAdmin();
+  showToast('Histórico limpo!');
+}
+
+function limparTudo() {
+  localStorage.removeItem('sorteio_participants');
+  localStorage.removeItem('sorteio_winners');
+  document.getElementById('winner-display').innerHTML = '<p class="placeholder-text">Pressione o botão para sortear</p>';
+  renderAdmin();
+  showToast('Dados apagados!');
+}
+
+checkAlreadyRegistered();
+</script>
+</body>
+</html>
